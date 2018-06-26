@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from util.loss_functions import CrossEntropyError
+from util.loss_functions import *
 from model.logistic_layer import LogisticLayer
 from model.classifier import Classifier
 
@@ -37,13 +37,14 @@ class MultilayerPerceptron(Classifier):
         learningRate : float
         epochs : positive int
         performances: array of floats
+        activations: list of activation values for each layer
         """
 
         self.learningRate = learningRate
         self.epochs = epochs
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
-        self.cost = cost
+        self.activations = []
 
         self.trainingSet = train
         self.validationSet = valid
@@ -113,6 +114,12 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
+        #inp = np.transpose(np.matrix(inp))
+        self.activations = []
+        output = self._get_input_layer().forward(inp)
+        for layer in self.layers[1:]:
+            output = layer.forward(np.append(1,output))
+            self.activations.append(output)
         
     def _compute_error(self, target):
         """
@@ -123,13 +130,19 @@ class MultilayerPerceptron(Classifier):
         ndarray :
             a numpy array (1,nOut) containing the output of the layer
         """
-        pass
+        return self._get_layer(target).activationDerivative(self.activations[target])
     
     def _update_weights(self, learningRate):
         """
         Update the weights of the layers by propagating back the error
         """
-        pass
+
+        #output_error = self._compute_error(-1)
+        #self._get_layer(-1).updateWeights()
+        for i in reversed(range(len(self.layers)-2)):
+            error = self._get_layer(i).computeDerivative(self._compute_error(i+1), self._get_layer(i+1).weights)
+            self._get_layer(i).updateWeights(learningRate)
+            
         
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -139,14 +152,16 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
-        pass
+        for i in range(self.epochs):
+            self._feed_forward(self._get_input_layer().inp)
+            self._update_weights(self.learningRate)
 
 
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
         # You need to implement something here
-        pass
+        self._feed_forward(test_instance)
         
 
     def evaluate(self, test=None):
