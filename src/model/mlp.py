@@ -114,13 +114,11 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
-        #inp = np.transpose(np.matrix(inp))
         self.activations = []
-        
         for layer in self.layers[1:]:
             inp = layer.forward(inp)
-            print inp
             self.activations.append(inp)
+            
         
     def _compute_error(self, target):
         """
@@ -139,7 +137,7 @@ class MultilayerPerceptron(Classifier):
         """
 
         #output_error = self._compute_error(-1)
-        #self._get_layer(-1).updateWeights()
+        self._get_layer(-1).updateWeights(learningRate)
         for i in reversed(range(len(self.layers)-2)):
             error = self._get_layer(i).computeDerivative(self._compute_error(i+1), self._get_layer(i+1).weights)
             self._get_layer(i).updateWeights(learningRate)
@@ -153,12 +151,13 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
+        
         for i in range(self.epochs):
-            #inp = np.ndarray((1,1))
-            #inp[0] = 1
-            #inp = np.concatenate((inp,self._get_input_layer().outp),axis=0)
-            inp = np.append([1],self._get_input_layer().outp)
-            self._feed_forward(inp.T)
+            #the training set should be shuffled instead of iterating
+            inp = self._get_input_layer().forward(self.trainingSet.input[i])
+            #insert 1 at start
+            inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
+            self._feed_forward(inp)
             self._update_weights(self.learningRate)
 
 
@@ -168,10 +167,10 @@ class MultilayerPerceptron(Classifier):
         # You need to implement something here
         #self._get_input_layer().inp = test_instance
         outp = self._get_input_layer().forward(test_instance)
-        outp = np.append(1,outp)
+        outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
         #print(self.activations[0])
-        return self.activations[0] > self.activations[0]
+        return 0
         
 
     def evaluate(self, test=None):
