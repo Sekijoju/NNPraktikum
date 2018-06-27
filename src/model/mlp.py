@@ -116,10 +116,11 @@ class MultilayerPerceptron(Classifier):
         """
         #inp = np.transpose(np.matrix(inp))
         self.activations = []
-        output = self._get_input_layer().forward(inp)
+        
         for layer in self.layers[1:]:
-            output = layer.forward(np.append(1,output))
-            self.activations.append(output)
+            inp = layer.forward(inp)
+            print inp
+            self.activations.append(inp)
         
     def _compute_error(self, target):
         """
@@ -153,7 +154,11 @@ class MultilayerPerceptron(Classifier):
             Print logging messages with validation accuracy if verbose is True.
         """
         for i in range(self.epochs):
-            self._feed_forward(self._get_input_layer().inp)
+            #inp = np.ndarray((1,1))
+            #inp[0] = 1
+            #inp = np.concatenate((inp,self._get_input_layer().outp),axis=0)
+            inp = np.append([1],self._get_input_layer().outp)
+            self._feed_forward(inp.T)
             self._update_weights(self.learningRate)
 
 
@@ -161,7 +166,12 @@ class MultilayerPerceptron(Classifier):
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
         # You need to implement something here
-        self._feed_forward(test_instance)
+        #self._get_input_layer().inp = test_instance
+        outp = self._get_input_layer().forward(test_instance)
+        outp = np.append(1,outp)
+        self._feed_forward(outp)
+        #print(self.activations[0])
+        return self.activations[0] > self.activations[0]
         
 
     def evaluate(self, test=None):
