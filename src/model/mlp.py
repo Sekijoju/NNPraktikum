@@ -147,7 +147,7 @@ class MultilayerPerceptron(Classifier):
         #output_error = self._compute_error(-1)
         self._get_layer(-1).updateWeights(learningRate)
         for i in reversed(range(len(self.layers)-2)):
-            error = self._get_layer(i).computeDerivative(self._compute_error(i+1), self._get_layer(i+1).weights)
+            self._get_layer(i).computeDerivative(self._compute_error(i+1), self._get_layer(i+1).weights)
             self._get_layer(i).updateWeights(learningRate)
             
         
@@ -163,7 +163,7 @@ class MultilayerPerceptron(Classifier):
         
         for i in range(self.epochs):
             #training sets are shuffled in mnist_seven.py, take random batch to train
-            inp = self._get_input_layer().forward(self.trainingSet.input[np.random.randint(0,len(self.trainingSet.input))])
+            self._get_input_layer().forward(self.trainingSet.input[np.random.randint(0,len(self.trainingSet.input))])
             #insert 1 at start
             inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
             self._feed_forward(inp)
