@@ -78,12 +78,18 @@ class MultilayerPerceptron(Classifier):
         self.layers.append(LogisticLayer(train.input.shape[1], 128, 
                            None, inputActivation, False))
 
+        # Hidden layers
+        self.layers.append(LogisticLayer(128, 128, 
+                           None, inputActivation, False))
+
         # Output layer
         outputActivation = "softmax"
         self.layers.append(LogisticLayer(128, 10, 
                            None, outputActivation, True))
 
+        
         self.inputWeights = inputWeights
+        
 
         # add bias values ("1"s) at the beginning of all data sets
         self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
@@ -117,6 +123,8 @@ class MultilayerPerceptron(Classifier):
         self.activations = []
         for layer in self.layers[1:]:
             inp = layer.forward(inp)
+            #add the 1 to output
+            inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
             self.activations.append(inp)
             
         
@@ -170,8 +178,10 @@ class MultilayerPerceptron(Classifier):
         outp = self._get_input_layer().forward(test_instance[0])
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
-        #print self._get_output_layer().outp.argmax(axis=0)
-        return self._get_output_layer().outp.argmax(axis=0) == 7
+        #np.delete(self._get_output_layer().outp,0,axis=0)
+        print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
+        #print (len(self._get_output_layer().outp))
+        return self._get_output_layer().outp.argmax(axis=0) == test_instance[1]
         
 
     def evaluate(self, test=None):
