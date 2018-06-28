@@ -79,8 +79,10 @@ class MultilayerPerceptron(Classifier):
                            None, inputActivation, False))
 
         # Hidden layers
-        self.layers.append(LogisticLayer(128, 128, 
-                           None, inputActivation, False))
+        for i in range(10):
+            self.layers.append(LogisticLayer(128, 128, 
+                               None, inputActivation, False))
+
 
         # Output layer
         outputActivation = "softmax"
