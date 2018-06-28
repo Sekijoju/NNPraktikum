@@ -16,7 +16,7 @@ class MultilayerPerceptron(Classifier):
 
     def __init__(self, train, valid, test, layers=None, inputWeights=None,
                  outputTask='classification', outputActivation='softmax',
-                 loss='cce', learningRate=0.01, epochs=50):
+                 loss='bce', learningRate=0.01, epochs=50):
 
         """
         A MNIST recognizer based on multi-layer perceptron algorithm
@@ -45,6 +45,7 @@ class MultilayerPerceptron(Classifier):
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
         self.activations = []
+        self.currentSet = 0
 
         self.trainingSet = train
         self.validationSet = valid
@@ -52,7 +53,7 @@ class MultilayerPerceptron(Classifier):
         
         if loss == 'bce':
             self.loss = BinaryCrossEntropyError()
-        elif loss == 'cce':
+        elif loss == 'crossentropy':
             self.loss = CrossEntropyError()
         elif loss == 'sse':
             self.loss = SumSquaredError()
@@ -82,7 +83,7 @@ class MultilayerPerceptron(Classifier):
 
         hiddenActivation = "sigmoid"
         # Hidden layers
-        for i in range(3):
+        for i in range(1):
             self.layers.append(LogisticLayer(128, 128, 
                                None, hiddenActivation, False))
 
@@ -129,7 +130,7 @@ class MultilayerPerceptron(Classifier):
         for layer in self.layers[1:]:
             inp = layer.forward(inp)
             #add the 1 to output
-            inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
+            inp = np.insert(inp,0,1,axis=0)
             self.activations.append(inp)
             
         
@@ -142,19 +143,34 @@ class MultilayerPerceptron(Classifier):
         ndarray :
             a numpy array (1,nOut) containing the output of the layer
         """
-        return self._get_layer(target).activationDerivative(self.activations[target])
+        if target == (len(self.layers)-1):
+            #implement error for output layer here
+            return self.loss.calculateError(self.trainingSet.label[self.currentSet], self._get_output_layer().outp)
+        else:
+            #implement error for other layers
+            #tmp_weights = np.delete(self._get_layer(target+1).weights,0,axis=1)
+            return np.dot(self._get_layer(target+1).deltas, self._get_layer(target+1).weights.T)
     
     def _update_weights(self, learningRate):
         """
         Update the weights of the layers by propagating back the error
         """
 
-        #output_error = self._compute_error(-1)
-        self._get_layer(-1).updateWeights(learningRate)
-        for i in reversed(range(len(self.layers)-2)):
-            self._get_layer(i).computeDerivative(self._compute_error(i+1), self._get_layer(i+1).weights)
-            self._get_layer(i).updateWeights(learningRate)
-            
+        #output error and derivative
+        output_weights = np.ones((self._get_output_layer().nOut, self._get_output_layer().nOut))
+        self._get_output_layer().computeDerivative(self._compute_error(len(self.layers)-1), output_weights)
+        #self._get_output_layer().updateWeights(learningRate)
+
+        #rest of the network
+        #backpropagate first
+        for i in range(len(self.layers)-2,0,-1):
+            tmp_weights = np.delete(self._get_layer(i+1).weights,0,axis=0)
+            self._get_layer(i).computeDerivative(self._get_layer(i+1).deltas, tmp_weights.T)
+            np.insert(self._get_layer(i+1).weights,0,1,axis=0)
+
+        #then update weights
+        for layer in self.layers:
+            layer.updateWeights(learningRate)
         
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -168,11 +184,14 @@ class MultilayerPerceptron(Classifier):
         
         for i in range(self.epochs):
             #training sets are shuffled in mnist_seven.py, take random batch to train
-            self._get_input_layer().forward(self.trainingSet.input[np.random.randint(0,len(self.trainingSet.input))])
-            #insert 1 at start
-            inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
-            self._feed_forward(inp)
-            self._update_weights(self.learningRate)
+            #np.random.randint(0,len(self.trainingSet.input))
+            for j in range(len(self.trainingSet.input)):
+                self.currentSet = j%len(self.trainingSet.input)
+                self._get_input_layer().forward(self.trainingSet.input[self.currentSet])
+                #insert 1 at start
+                inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
+                self._feed_forward(inp)
+                self._update_weights(self.learningRate)
 
 
 
@@ -183,8 +202,9 @@ class MultilayerPerceptron(Classifier):
         outp = self._get_input_layer().forward(test_instance[0])
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
-        np.delete(self._get_output_layer().outp,0,axis=0)
+        #np.delete(self._get_output_layer().outp,0,axis=0)
         print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
+        #print (self._get_output_layer().outp[0])
         #print (len(self._get_output_layer().outp))
         return self._get_output_layer().outp.argmax(axis=0)
 

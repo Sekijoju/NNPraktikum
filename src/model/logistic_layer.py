@@ -144,6 +144,7 @@ class LogisticLayer():
         """
 
         # weight updating as gradient descent principle
+        i= 0
         for neuron in range(0, self.nOut):
             self.weights[:, neuron] -= (learningRate *
                                         self.deltas[neuron] *

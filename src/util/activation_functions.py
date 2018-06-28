@@ -33,9 +33,10 @@ class Activation:
     @staticmethod
     def tanh(netOutput):
         # return 2*Activation.sigmoid(2*netOutput)-1
-        ex = exp(1.0*netOutput)
-        exn = exp(-1.0*netOutput)
-        return divide(ex-exn, ex+exn)  # element-wise division
+        #ex = exp(1.0*netOutput)
+        #exn = exp(-1.0*netOutput)
+        #return divide(ex-exn, ex+exn)  # element-wise division
+        return np.tanh(netOutput)
 
     @staticmethod
     def tanhPrime(netOutput):
