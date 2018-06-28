@@ -154,8 +154,8 @@ class MultilayerPerceptron(Classifier):
         """
         
         for i in range(self.epochs):
-            #the training set should be shuffled instead of iterating
-            inp = self._get_input_layer().forward(self.trainingSet.input[i])
+            #training sets are shuffled in mnist_seven.py, take random batch to train
+            inp = self._get_input_layer().forward(self.trainingSet.input[np.random.randint(0,len(self.trainingSet.input))])
             #insert 1 at start
             inp = np.insert(self._get_input_layer().outp,0,1,axis=0)
             self._feed_forward(inp)
@@ -171,7 +171,7 @@ class MultilayerPerceptron(Classifier):
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
         #print self._get_output_layer().outp.argmax(axis=0)
-        return self._get_output_layer().outp.argmax(axis=0) == test_instance[1]
+        return self._get_output_layer().outp.argmax(axis=0) == 7
         
 
     def evaluate(self, test=None):

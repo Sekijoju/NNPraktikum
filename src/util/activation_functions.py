@@ -70,7 +70,8 @@ class Activation:
     @staticmethod
     def softmaxPrime(netOutput):
         # Here you have to code the softmax function
-        pass
+        s = netOutput.reshape(-1,1)
+        return np.diagflat(s) - np.dot(s, s.T)
         
     @staticmethod
     def getActivation(str):
