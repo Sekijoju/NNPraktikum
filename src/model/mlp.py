@@ -150,6 +150,7 @@ class MultilayerPerceptron(Classifier):
         ----------
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
+            We can use the activations list to log the accuracy.
         """
         
         for i in range(self.epochs):
@@ -169,8 +170,7 @@ class MultilayerPerceptron(Classifier):
         outp = self._get_input_layer().forward(test_instance[0])
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
-        #print(self.activations[0])
-        print self._get_output_layer().outp.argmax(axis=0)
+        #print self._get_output_layer().outp.argmax(axis=0)
         return self._get_output_layer().outp.argmax(axis=0) == test_instance[1]
         
 
