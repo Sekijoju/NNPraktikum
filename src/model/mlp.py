@@ -16,7 +16,7 @@ class MultilayerPerceptron(Classifier):
 
     def __init__(self, train, valid, test, layers=None, inputWeights=None,
                  outputTask='classification', outputActivation='softmax',
-                 loss='bce', learningRate=0.01, epochs=50):
+                 loss='cce', learningRate=0.01, epochs=50):
 
         """
         A MNIST recognizer based on multi-layer perceptron algorithm
@@ -52,6 +52,8 @@ class MultilayerPerceptron(Classifier):
         
         if loss == 'bce':
             self.loss = BinaryCrossEntropyError()
+        elif loss == 'cce':
+            self.loss = CrossEntropyError()
         elif loss == 'sse':
             self.loss = SumSquaredError()
         elif loss == 'mse':
