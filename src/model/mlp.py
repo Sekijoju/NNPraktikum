@@ -78,10 +78,11 @@ class MultilayerPerceptron(Classifier):
         self.layers.append(LogisticLayer(train.input.shape[1], 128, 
                            None, inputActivation, False))
 
+        hiddenActivation = "sigmoid"
         # Hidden layers
-        for i in range(10):
+        for i in range(3):
             self.layers.append(LogisticLayer(128, 128, 
-                               None, inputActivation, False))
+                               None, hiddenActivation, False))
 
 
         # Output layer
@@ -180,11 +181,10 @@ class MultilayerPerceptron(Classifier):
         outp = self._get_input_layer().forward(test_instance[0])
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
-        #np.delete(self._get_output_layer().outp,0,axis=0)
+        np.delete(self._get_output_layer().outp,0,axis=0)
         print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
         #print (len(self._get_output_layer().outp))
-        return self._get_output_layer().outp.argmax(axis=0) == test_instance[1]
-        
+        return self._get_output_layer().outp.argmax(axis=0)
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.

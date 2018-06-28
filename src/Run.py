@@ -34,7 +34,7 @@ def main():
                                         data.validationSet,
                                         data.testSet,
                                         learningRate=0.005,
-                                        epochs=2000)
+                                        epochs=10000)
                                         
     
     # Report the result #
