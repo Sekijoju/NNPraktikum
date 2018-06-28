@@ -88,7 +88,6 @@ class LogisticLayer():
         self.inp = inp
         outp = self._fire(inp)
         self.outp = outp
-
         return outp
 
     def computeDerivative(self, next_derivatives, next_weights):

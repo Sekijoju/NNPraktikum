@@ -166,11 +166,12 @@ class MultilayerPerceptron(Classifier):
         # Classify an instance given the model of the classifier
         # You need to implement something here
         #self._get_input_layer().inp = test_instance
-        outp = self._get_input_layer().forward(test_instance)
+        outp = self._get_input_layer().forward(test_instance.input)
         outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(outp)
         #print(self.activations[0])
-        return 0
+        print self._get_output_layer().outp.argmax(axis=0)
+        return self._get_output_layer().outp.outp.argmax(axis=0) == test_instance.label
         
 
     def evaluate(self, test=None):
@@ -187,7 +188,7 @@ class MultilayerPerceptron(Classifier):
             List of classified decisions for the dataset's entries.
         """
         if test is None:
-            test = self.testSet.input
+            test = self.testSet
         # Once you can classify an instance, just use map for all of the test
         # set.
         return list(map(self.classify, test))
