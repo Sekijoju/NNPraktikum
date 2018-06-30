@@ -83,7 +83,7 @@ class MultilayerPerceptron(Classifier):
 
         hiddenActivation = "sigmoid"
         # Hidden layers
-        for i in range(10):
+        for i in range(0):
             self.layers.append(LogisticLayer(128, 128, 
                                None, hiddenActivation, False))
 
@@ -143,18 +143,14 @@ class MultilayerPerceptron(Classifier):
         ndarray :
             a numpy array (1,nOut) containing the output of the layer
         """
-        if target == (len(self.layers)-1):
-            #implement error for output layer here
-            expected = np.zeros((1,self._get_layer(target).nOut))
-            expected[0][self.trainingSet.label[self.currentSet]]=1
-            #error = self.loss.calculateError(expected, self._get_output_layer().outp)
-            
-            error = (expected - self._get_output_layer().outp) #* self._get_output_layer().activationDerivative(self._get_output_layer().outp)
-            return error
-        else:
-            #implement error for other layers
-            error = np.dot(self._get_layer(target+1).deltas, self._get_layer(target+1).weights.T)
-            return error
+        #implement error for output layer here
+        expected = np.zeros((1,self._get_layer(target).nOut))
+        expected[0][self.trainingSet.label[self.currentSet]]=1
+        #error = self.loss.calculateError(expected, self._get_output_layer().outp)
+        
+        error = (expected - self._get_output_layer().outp) #* self._get_output_layer().activationDerivative(self._get_output_layer().outp)
+        return error
+        
     
     def _update_weights(self, learningRate):
         """
@@ -176,14 +172,7 @@ class MultilayerPerceptron(Classifier):
         #then update weights
         
         for i in range(len(self.layers)):
-            #layer.inp = np.insert(layer.inp,0,1,axis=0)
-            #if not self._get_layer(i).isClassifierLayer:
-            self._get_layer(i).inp = np.delete(self._get_layer(i).inp,0,axis=0)
-            self._get_layer(i).weights = np.delete(self._get_layer(i).weights,0,axis=0)
-            self._get_layer(i).deltas = self._get_layer(i).deltas
             self._get_layer(i).updateWeights(learningRate)
-            self._get_layer(i).inp = np.insert(self._get_layer(i).inp,0,1,axis=0)
-            self._get_layer(i).weights = np.insert(self._get_layer(i).weights,0,1,axis=0)
             
         
     def train(self, verbose=True):
