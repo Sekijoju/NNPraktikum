@@ -122,11 +122,7 @@ class CrossEntropyError(Error):
         self.errorString = 'crossentropy'
 
     def calculateError(self, target, output):
-        m = target.shape[0]
-        p = softmax(output)
-        log_likelihood = -np.log(p[range(m),target])
-        loss = np.sum(log_likelihood) / m
-        return loss
+        return - np.sum(np.multiply(target, np.log(output)) + np.multiply((1-target), np.log(1-output)))
         
     def calculateDerivative(self, target, output):
         m = target.shape[0]
