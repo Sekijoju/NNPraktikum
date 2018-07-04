@@ -37,14 +37,12 @@ class MultilayerPerceptron(Classifier):
         learningRate : float
         epochs : positive int
         performances: array of floats
-        activations: list of activation values for each layer
         """
 
         self.learningRate = learningRate
         self.epochs = epochs
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
-        self.activations = []
         self.currentSet = 0
 
         self.trainingSet = train
@@ -83,14 +81,14 @@ class MultilayerPerceptron(Classifier):
 
         hiddenActivation = "sigmoid"
         # Hidden layers
-        for i in range(0):
-            self.layers.append(LogisticLayer(128, 128, 
+        for i in range(1):
+            self.layers.append(LogisticLayer(128, 64, 
                                None, hiddenActivation, False))
 
 
         # Output layer
         outputActivation = "softmax"
-        self.layers.append(LogisticLayer(128, 10, 
+        self.layers.append(LogisticLayer(64, 10, 
                            None, outputActivation, True))
 
         
@@ -126,12 +124,10 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
-        self.activations = []
-        for layer in self.layers[1:]:
+        for layer in self.layers:
             inp = layer.forward(inp)
-            #add the 1 to output
+            #add the 1 to the next input
             inp = np.insert(inp,0,1,axis=0)
-            self.activations.append(inp)
             
         
     def _compute_error(self, target):
@@ -146,9 +142,9 @@ class MultilayerPerceptron(Classifier):
         #implement error for output layer here
         expected = np.zeros((1,self._get_layer(target).nOut))
         expected[0][self.trainingSet.label[self.currentSet]]=1
-        #error = self.loss.calculateError(expected, self._get_output_layer().outp)
+        error = self.loss.calculateError(expected, self._get_output_layer().outp)
         
-        error = (expected - self._get_output_layer().outp) #* self._get_output_layer().activationDerivative(self._get_output_layer().outp)
+        #error = (expected - self._get_output_layer().outp) #* self._get_output_layer().activationDerivative(self._get_output_layer().outp)
         return error
         
     
@@ -158,21 +154,23 @@ class MultilayerPerceptron(Classifier):
         """
 
         #output error and derivative
-        #output_weights = np.ones((1, self._get_output_layer().nOut))
+        next_layer_weights = np.identity(self._get_output_layer().nOut)
+        expected = np.zeros((self._get_output_layer().nOut,1))
+        expected[self.trainingSet.label[self.currentSet]][0]=1
         #next_derivative = self._get_output_layer().computeDerivative(self._compute_error(len(self.layers)-1), output_weights.T)
-        next_derivative = self._compute_error(len(self.layers)-1)
+        #next_derivative = self.loss.calculateDerivative(expected, self._get_output_layer().outp)
+        next_derivative = expected - self._get_output_layer().outp
         self._get_output_layer().deltas = next_derivative
+        next_layer_weights = np.delete(self._get_output_layer().weights,0,axis=0)
         
-        #rest of the network
-        #backpropagate first
-        for i in range(len(self.layers)-2,-1,-1):
-            tmp_weights = np.delete(self._get_layer(i+1).weights,0,axis=0)
-            next_derivative = self._get_layer(i).computeDerivative(next_derivative, tmp_weights.T)
+        #backpropagate
+        for layer in reversed(self.layers[:-1]):
+            next_derivative = layer.computeDerivative(next_derivative, next_layer_weights.T)
+            next_layer_weights = np.delete(layer.weights,0,axis=0)
 
         #then update weights
-        
-        for i in range(len(self.layers)):
-            self._get_layer(i).updateWeights(learningRate)
+        for layer in self.layers:
+            layer.updateWeights(learningRate)
             
         
     def train(self, verbose=True):
@@ -190,27 +188,17 @@ class MultilayerPerceptron(Classifier):
             #np.random.randint(0,len(self.trainingSet.input))
             for j in range(len(self.trainingSet.input)):
                 self.currentSet = j%len(self.trainingSet.input)
-                self._get_input_layer().forward(self.trainingSet.input[self.currentSet])
-                #insert 1 at start
-                outp = np.insert(self._get_input_layer().outp,0,1,axis=0)
-                self._get_input_layer().outp = outp 
-                self._feed_forward(outp)
-                self._get_input_layer().outp = np.delete(outp,0,axis=0)
+                self._feed_forward(self.trainingSet.input[self.currentSet])
                 self._update_weights(self.learningRate)
 
 
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
-        # You need to implement something here
-        #self._get_input_layer().inp = test_instance
-        outp = self._get_input_layer().forward(test_instance[0])
-        outp = np.insert(outp,0,1,axis=0)
-        self._feed_forward(outp)
-        #np.delete(self._get_output_layer().outp,0,axis=0)
+##        outp = self._get_input_layer().forward(test_instance[0])
+##        outp = np.insert(outp,0,1,axis=0)
+        self._feed_forward(test_instance[0])
         print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
-        #print (self._get_output_layer().outp[0])
-        #print (len(self._get_output_layer().outp))
         return self._get_output_layer().outp.argmax(axis=0)
 
     def evaluate(self, test=None):

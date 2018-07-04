@@ -6,6 +6,7 @@ Loss functions.
 """
 
 import numpy as np
+from util.activation_functions import *
 
 from abc import ABCMeta, abstractmethod, abstractproperty
 
