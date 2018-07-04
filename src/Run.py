@@ -85,13 +85,13 @@ def main():
 ##    evaluator.printAccuracy(data.testSet, lrPred)
 
     print("\nResult of the MLP recognizer:")
-    #evaluator.printComparison(data.testSet, mlpPred)    
+##    evaluator.printComparison(data.testSet, mlpPred)    
     evaluator.printAccuracy(data.testSet, mlpPred)
     
     # Draw
-##    plot = PerformancePlot("MLP validation")
-##    plot.draw_performance_epoch(myMLPClassifier.performances,
-##                                myMLPClassifier.epochs)
+    plot = PerformancePlot("MLP validation")
+    plot.draw_performance_epoch(myMLPClassifier.performances,
+                                myMLPClassifier.epochs)
     
     
 if __name__ == '__main__':

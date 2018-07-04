@@ -81,14 +81,13 @@ class MultilayerPerceptron(Classifier):
 
         hiddenActivation = "sigmoid"
         # Hidden layers
-        for i in range(1):
-            self.layers.append(LogisticLayer(128, 32, 
-                               None, hiddenActivation, False))
+        self.layers.append(LogisticLayer(128, 64, 
+                           None, hiddenActivation, False))
 
 
         # Output layer
         outputActivation = "softmax"
-        self.layers.append(LogisticLayer(32, 10, 
+        self.layers.append(LogisticLayer(64, 10, 
                            None, outputActivation, True))
 
         
@@ -189,6 +188,7 @@ class MultilayerPerceptron(Classifier):
             if verbose:
                 print("Training epoch {0}/{1}.."
                       .format(i + 1, self.epochs))
+                #print("Learning rate: {0:.4f}".format(self.learningRate))
 
             if verbose:
                 accuracy = accuracy_score(self.validationSet.label,
@@ -199,6 +199,9 @@ class MultilayerPerceptron(Classifier):
                 print("Accuracy on validation: {0:.2f}%"
                       .format(accuracy * 100))
                 print("-----------------------------")
+
+            #self.learningRate = self.learningRate * 0.9
+
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
@@ -221,6 +224,8 @@ class MultilayerPerceptron(Classifier):
         """
         if test is None:
             test = zip(self.testSet.input,self.testSet.label)
+        else:
+            test = zip(test.input, test.label)
         # Once you can classify an instance, just use map for all of the test
         # set.
         return list(map(self.classify, test))
