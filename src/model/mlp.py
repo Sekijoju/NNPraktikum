@@ -155,16 +155,16 @@ class MultilayerPerceptron(Classifier):
 
         #output error and derivative
         next_layer_weights = np.identity(self._get_output_layer().nOut)
-        expected = np.zeros((self._get_output_layer().nOut,1))
-        expected[self.trainingSet.label[self.currentSet]][0]=1
+        expected = np.zeros(self._get_output_layer().nOut)
+        expected[self.trainingSet.label[self.currentSet]]=1
         #next_derivative = self._get_output_layer().computeDerivative(self._compute_error(len(self.layers)-1), output_weights.T)
-        #next_derivative = self.loss.calculateDerivative(expected, self._get_output_layer().outp)
-        next_derivative = expected - self._get_output_layer().outp
-        self._get_output_layer().deltas = next_derivative
-        next_layer_weights = np.delete(self._get_output_layer().weights,0,axis=0)
+        next_derivative = self.loss.calculateDerivative(expected, self._get_output_layer().outp)
+        #next_derivative = expected - self._get_output_layer().outp
+        #self._get_output_layer().deltas = next_derivative
+        #next_layer_weights = np.delete(self._get_output_layer().weights,0,axis=0)
         
         #backpropagate
-        for layer in reversed(self.layers[:-1]):
+        for layer in reversed(self.layers):
             next_derivative = layer.computeDerivative(next_derivative, next_layer_weights.T)
             next_layer_weights = np.delete(layer.weights,0,axis=0)
 
