@@ -4,6 +4,13 @@ The coding framework for KIT Neural Network Praktikum
 See [ilias.studium.kit.edu](https://ilias.studium.kit.edu/goto_produktiv_crs_413999.html)
 for more information.
 
+## Team
+Vincent Meyers
+Nguyen Minh Dang
+Lukas Hennig
+Benjamin Dornfeld
+Christian Dinse
+
 ## Python version
 We use Python 2.7, not Python 3.x
 
