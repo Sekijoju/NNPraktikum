@@ -126,8 +126,4 @@ class CrossEntropyError(Error):
         return - np.sum(np.multiply(target, np.log(output)) + np.multiply((1-target), np.log(1-output)))
         
     def calculateDerivative(self, target, output):
-        m = target.shape[0]
-        grad = Activation.softmax(output)
-        grad[range(m),target] -= 1
-        grad = grad/m
-        return grad
+        return -(target / (output + 1e-8)) + (1.0 - target) / (1.0 - output + 1e-8)

@@ -82,13 +82,13 @@ class MultilayerPerceptron(Classifier):
         hiddenActivation = "sigmoid"
         # Hidden layers
         for i in range(1):
-            self.layers.append(LogisticLayer(128, 64, 
+            self.layers.append(LogisticLayer(128, 32, 
                                None, hiddenActivation, False))
 
 
         # Output layer
         outputActivation = "softmax"
-        self.layers.append(LogisticLayer(64, 10, 
+        self.layers.append(LogisticLayer(32, 10, 
                            None, outputActivation, True))
 
         
@@ -157,11 +157,7 @@ class MultilayerPerceptron(Classifier):
         next_layer_weights = np.identity(self._get_output_layer().nOut)
         expected = np.zeros(self._get_output_layer().nOut)
         expected[self.trainingSet.label[self.currentSet]]=1
-        #next_derivative = self._get_output_layer().computeDerivative(self._compute_error(len(self.layers)-1), output_weights.T)
         next_derivative = self.loss.calculateDerivative(expected, self._get_output_layer().outp)
-        #next_derivative = expected - self._get_output_layer().outp
-        #self._get_output_layer().deltas = next_derivative
-        #next_layer_weights = np.delete(self._get_output_layer().weights,0,axis=0)
         
         #backpropagate
         for layer in reversed(self.layers):
@@ -185,20 +181,29 @@ class MultilayerPerceptron(Classifier):
         
         for i in range(self.epochs):
             #training sets are shuffled in mnist_seven.py, take random batch to train
-            #np.random.randint(0,len(self.trainingSet.input))
             for j in range(len(self.trainingSet.input)):
                 self.currentSet = j%len(self.trainingSet.input)
                 self._feed_forward(self.trainingSet.input[self.currentSet])
                 self._update_weights(self.learningRate)
+                
+            if verbose:
+                print("Training epoch {0}/{1}.."
+                      .format(i + 1, self.epochs))
 
-
+            if verbose:
+                accuracy = accuracy_score(self.validationSet.label,
+                                          self.evaluate(self.validationSet))
+                # Record the performance of each epoch for later usages
+                # e.g. plotting, reporting..
+                self.performances.append(accuracy)
+                print("Accuracy on validation: {0:.2f}%"
+                      .format(accuracy * 100))
+                print("-----------------------------")
 
     def classify(self, test_instance):
         # Classify an instance given the model of the classifier
-##        outp = self._get_input_layer().forward(test_instance[0])
-##        outp = np.insert(outp,0,1,axis=0)
         self._feed_forward(test_instance[0])
-        print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
+        #print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
         return self._get_output_layer().outp.argmax(axis=0)
 
     def evaluate(self, test=None):
