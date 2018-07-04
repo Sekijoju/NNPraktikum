@@ -43,7 +43,6 @@ class MultilayerPerceptron(Classifier):
         self.epochs = epochs
         self.outputTask = outputTask  # Either classification or regression
         self.outputActivation = outputActivation
-        self.currentSet = 0
 
         self.trainingSet = train
         self.validationSet = valid
@@ -79,20 +78,17 @@ class MultilayerPerceptron(Classifier):
         self.layers.append(LogisticLayer(train.input.shape[1], 128, 
                            None, inputActivation, False))
 
-        hiddenActivation = "sigmoid"
         # Hidden layers
+        hiddenActivation = "sigmoid"
         self.layers.append(LogisticLayer(128, 64, 
                            None, hiddenActivation, False))
-
 
         # Output layer
         outputActivation = "softmax"
         self.layers.append(LogisticLayer(64, 10, 
                            None, outputActivation, True))
 
-        
         self.inputWeights = inputWeights
-        
 
         # add bias values ("1"s) at the beginning of all data sets
         self.trainingSet.input = np.insert(self.trainingSet.input, 0, 1,
@@ -123,11 +119,12 @@ class MultilayerPerceptron(Classifier):
         # Here you have to propagate forward through the layers
         # And remember the activation values of each layer
         """
+        nextInput = inp
         for layer in self.layers:
-            inp = layer.forward(inp)
-            #add the 1 to the next input
-            inp = np.insert(inp,0,1,axis=0)
-            
+            # The output of the current layer is the input of the next layer:
+            nextInput = layer.forward(nextInput)
+            # Add bias "1" at the beginning of the next input:
+            nextInput = np.insert(nextInput, 0, 1, axis=0)
         
     def _compute_error(self, target):
         """
@@ -138,35 +135,31 @@ class MultilayerPerceptron(Classifier):
         ndarray :
             a numpy array (1,nOut) containing the output of the layer
         """
-        #implement error for output layer here
-        expected = np.zeros((1,self._get_layer(target).nOut))
-        expected[0][self.trainingSet.label[self.currentSet]]=1
-        error = self.loss.calculateError(expected, self._get_output_layer().outp)
-        
-        #error = (expected - self._get_output_layer().outp) #* self._get_output_layer().activationDerivative(self._get_output_layer().outp)
-        return error
-        
+        return self.loss.calculateError(target, self._get_output_layer().outp)
     
-    def _update_weights(self, learningRate):
+    def _update_weights(self, learningRate, label):
         """
         Update the weights of the layers by propagating back the error
         """
-
-        #output error and derivative
+        # Backpropagation of error:
+        # To calculate the derivatives, we iterate over the layers in reverse order:
+        # In case of the output layer, next_weights is array of 1
+        # and next_derivatives - the derivative of the error will be the errors
+        target = np.zeros(self._get_output_layer().nOut)
+        target[label] = 1.0
+        next_derivative = self.loss.calculateDerivative(target, self._get_output_layer().outp)
         next_layer_weights = np.identity(self._get_output_layer().nOut)
-        expected = np.zeros(self._get_output_layer().nOut)
-        expected[self.trainingSet.label[self.currentSet]]=1
-        next_derivative = self.loss.calculateDerivative(expected, self._get_output_layer().outp)
-        
-        #backpropagate
-        for layer in reversed(self.layers):
-            next_derivative = layer.computeDerivative(next_derivative, next_layer_weights.T)
-            next_layer_weights = np.delete(layer.weights,0,axis=0)
 
-        #then update weights
+        # Backpropagate:
+        for layer in reversed(self.layers):
+            # Compute the derivatives:
+            next_derivative = layer.computeDerivative(next_derivative, next_layer_weights.T)
+            # Remove bias from weights, so it matches the output size of the next layer:
+            next_layer_weights = np.delete(layer.weights, 0, axis=0)
+
+        # Then update the weights:
         for layer in self.layers:
             layer.updateWeights(learningRate)
-            
         
     def train(self, verbose=True):
         """Train the Multi-layer Perceptrons
@@ -175,27 +168,26 @@ class MultilayerPerceptron(Classifier):
         ----------
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
-            We can use the activations list to log the accuracy.
         """
-        
-        for i in range(self.epochs):
-            #training sets are shuffled in mnist_seven.py, take random batch to train
-            for j in range(len(self.trainingSet.input)):
-                self.currentSet = j%len(self.trainingSet.input)
-                self._feed_forward(self.trainingSet.input[self.currentSet])
-                self._update_weights(self.learningRate)
-                
+        for epoch in range(self.epochs):
             if verbose:
                 print("Training epoch {0}/{1}.."
-                      .format(i + 1, self.epochs))
+                      .format(epoch + 1, self.epochs))
                 #print("Learning rate: {0:.4f}".format(self.learningRate))
 
+            for input, label in zip(self.trainingSet.input, self.trainingSet.label):
+                # Compute the network output via feed forward:
+                self._feed_forward(input)
+                # Backpropagate the error and update the weights
+                self._update_weights(self.learningRate, label)
+
+            # Determine accuracy by evaluating the validation set:
+            accuracy = accuracy_score(self.validationSet.label, self.evaluate(self.validationSet))
+            # Record the performance of each epoch for later usages
+            # e.g. plotting, reporting..
+            self.performances.append(accuracy)
+
             if verbose:
-                accuracy = accuracy_score(self.validationSet.label,
-                                          self.evaluate(self.validationSet))
-                # Record the performance of each epoch for later usages
-                # e.g. plotting, reporting..
-                self.performances.append(accuracy)
                 print("Accuracy on validation: {0:.2f}%"
                       .format(accuracy * 100))
                 print("-----------------------------")
@@ -204,10 +196,27 @@ class MultilayerPerceptron(Classifier):
 
 
     def classify(self, test_instance):
+        """Classify a single instance.
+
+        Parameters
+        ----------
+        test_instance : (list of floats, label)
+
+        Returns
+        -------
+        int :
+            The recognized digit (0-9).
+        """
         # Classify an instance given the model of the classifier
-        self._feed_forward(test_instance[0])
-        #print ('Solution: ',self._get_output_layer().outp.argmax(axis=0),', true label: ', test_instance[1])
-        return self._get_output_layer().outp.argmax(axis=0)
+        # Compute the network output via feed forward:
+        input = test_instance[0]
+        #label = test_instance[1]
+        self._feed_forward(input)
+        output = self._get_output_layer().outp
+        # Pick the digit with highest probability:
+        result = np.argmax(output, axis=0)
+        #print ('Solution: ', result,', true label: ', label)
+        return result
 
     def evaluate(self, test=None):
         """Evaluate a whole dataset.
@@ -223,9 +232,9 @@ class MultilayerPerceptron(Classifier):
             List of classified decisions for the dataset's entries.
         """
         if test is None:
-            test = zip(self.testSet.input,self.testSet.label)
-        else:
-            test = zip(test.input, test.label)
+            test = self.testSet
+        # Zip with labels, for debugging purposes:
+        test = zip(test.input, test.label)
         # Once you can classify an instance, just use map for all of the test
         # set.
         return list(map(self.classify, test))

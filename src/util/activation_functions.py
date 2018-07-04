@@ -64,13 +64,14 @@ class Activation:
 
     @staticmethod
     def softmax(netOutput):
-        # Here you have to code the softmax function
+        # Page 49 BackPropagation slides
+        # Numerically more stable:
         e_x = np.exp(netOutput - np.max(netOutput))
         return e_x / e_x.sum(axis=0)
         
     @staticmethod
     def softmaxPrime(netOutput):
-        # Here you have to code the softmax function
+        # Page 61 BackPropagation slides
         return netOutput * (1.0 - netOutput)
         
     @staticmethod
