@@ -5,10 +5,10 @@ See [ilias.studium.kit.edu](https://ilias.studium.kit.edu/goto_produktiv_crs_413
 for more information.
 
 ## Team
-Vincent Meyers
-Nguyen Minh Dang
-Lukas Hennig
-Benjamin Dornfeld
+Vincent Meyers  
+Nguyen Minh Dang  
+Lukas Hennig  
+Benjamin Dornfeld  
 Christian Dinse
 
 ## Python version
