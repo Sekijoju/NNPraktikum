@@ -34,8 +34,10 @@ def main():
                                         data.validationSet,
                                         data.testSet,
                                         loss = 'crossentropy',
-                                        learningRate=0.2,
-                                        epochs=20)
+                                        learningRate=0.1,
+                                        epochs=20,
+                                        momentum = 0.5,
+                                        dynamicLearningRate = True)
                                         
     
     # Report the result #

@@ -16,7 +16,8 @@ class MultilayerPerceptron(Classifier):
 
     def __init__(self, train, valid, test, layers=None, inputWeights=None,
                  outputTask='classification', outputActivation='softmax',
-                 loss='bce', learningRate=0.01, epochs=50):
+                 loss='bce', learningRate=0.01, epochs=50, momentum=0,
+                 dynamicLearningRate=False):
 
         """
         A MNIST recognizer based on multi-layer perceptron algorithm
@@ -47,7 +48,9 @@ class MultilayerPerceptron(Classifier):
         self.trainingSet = train
         self.validationSet = valid
         self.testSet = test
-        
+
+        self.momentum = momentum
+        self.dynamicLR = dynamicLearningRate
         if loss == 'bce':
             self.loss = BinaryCrossEntropyError()
         elif loss == 'crossentropy':
@@ -76,17 +79,17 @@ class MultilayerPerceptron(Classifier):
         # Input layer
         inputActivation = "sigmoid"
         self.layers.append(LogisticLayer(train.input.shape[1], 128, 
-                           None, inputActivation, False))
+                           None, inputActivation, False, momentum = self.momentum))
 
         # Hidden layers
         hiddenActivation = "sigmoid"
         self.layers.append(LogisticLayer(128, 64, 
-                           None, hiddenActivation, False))
+                           None, hiddenActivation, False, momentum = self.momentum))
 
         # Output layer
         outputActivation = "softmax"
         self.layers.append(LogisticLayer(64, 10, 
-                           None, outputActivation, True))
+                           None, outputActivation, True, momentum = self.momentum))
 
         self.inputWeights = inputWeights
 
@@ -169,11 +172,12 @@ class MultilayerPerceptron(Classifier):
         verbose : boolean
             Print logging messages with validation accuracy if verbose is True.
         """
+        momentum_changed = False
         for epoch in range(self.epochs):
             if verbose:
                 print("Training epoch {0}/{1}.."
                       .format(epoch + 1, self.epochs))
-                #print("Learning rate: {0:.4f}".format(self.learningRate))
+                print("Learning rate: {0:.4f}".format(self.learningRate))
 
             for input, label in zip(self.trainingSet.input, self.trainingSet.label):
                 # Compute the network output via feed forward:
@@ -192,7 +196,18 @@ class MultilayerPerceptron(Classifier):
                       .format(accuracy * 100))
                 print("-----------------------------")
 
-            #self.learningRate = self.learningRate * 0.9
+            #Set the momentum higher if we are stuck (0.9 is the max value we are choosing here)
+            if self.momentum > 0 and not momentum_changed:
+                if np.abs(np.mean(self.performances) - self.performances[-1]) < 0.10 and epoch > 10:
+                    for layer in self.layers:
+                        layer.momentum = 0.9
+                    print ("Change in momentum: ", self._get_output_layer().momentum)
+                    momentum_changed = True
+
+            #Reduce the learning rate if dynamic learning rate is active 
+            if self.dynamicLR:
+                if ((epoch+1)%5) == 0:
+                    self.learningRate = self.learningRate * 0.75
 
 
     def classify(self, test_instance):

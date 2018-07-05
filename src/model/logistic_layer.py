@@ -39,7 +39,7 @@ class LogisticLayer():
     """
 
     def __init__(self, nIn, nOut, weights=None,
-                 activation='sigmoid', isClassifierLayer=False):
+                 activation='sigmoid', isClassifierLayer=False, momentum = 0):
 
         # Get activation function from string
         self.activationString = activation
@@ -54,7 +54,9 @@ class LogisticLayer():
         self.inp[0] = 1
         self.outp = np.ndarray((nOut, 1))
         self.deltas = np.zeros((nOut, 1))
-
+        
+        self.momentum = momentum
+        
         # You can have better initialization here
         if weights is None:
             rns = np.random.RandomState(int(time.time()))
@@ -62,7 +64,10 @@ class LogisticLayer():
         else:
             assert(weights.shape == (nIn + 1, nOut))
             self.weights = weights
-
+        
+        self.velocity = np.zeros(self.weights.shape)
+        self.updated = False
+        
         self.isClassifierLayer = isClassifierLayer
 
         # Some handy properties of the layers
@@ -145,10 +150,18 @@ class LogisticLayer():
         """
 
         # weight updating as gradient descent principle
-        for neuron in range(0, self.nOut):
-            self.weights[:, neuron] -= (learningRate *
-                                        self.deltas[neuron] *
-                                        self.inp)
+        # use velocity for weight updates if we are using momentum
+        if (self.momentum > 0):
+            self.velocity = self.momentum * self.velocity
+            for neuron in range(0, self.nOut):
+                self.velocity[:, neuron] += (self.deltas[neuron] *
+                                            self.inp)
+            self.weights -= learningRate * self.velocity
+        else:   
+            for neuron in range(0, self.nOut):
+                self.weights[:, neuron] -= (learningRate *
+                                            self.deltas[neuron] *
+                                            self.inp)
         
 
     def _fire(self, inp):
