@@ -78,12 +78,12 @@ class MultilayerPerceptron(Classifier):
 
         # Input layer
         inputActivation = "sigmoid"
-        self.layers.append(LogisticLayer(train.input.shape[1], 512, 
+        self.layers.append(LogisticLayer(train.input.shape[1], 256, 
                            None, inputActivation, False, momentum = self.momentum))
 
         # Hidden layers
         hiddenActivation = "sigmoid"
-        self.layers.append(LogisticLayer(512, 128, 
+        self.layers.append(LogisticLayer(256, 128, 
                            None, hiddenActivation, False, momentum = self.momentum))
 
         # Output layer
