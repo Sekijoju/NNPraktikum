@@ -45,8 +45,8 @@ class Activation:
 
     @staticmethod
     def rectified(netOutput):
-        #return asarray([max(0.0, i) for i in netOutput])
-        return netOutput * (netOutput > 0)
+        return asarray([max(0.001, i) for i in netOutput])
+        #return netOutput * (netOutput > 0)
 
     @staticmethod
     def rectifiedPrime(netOutput):

@@ -39,7 +39,7 @@ class LogisticLayer():
     """
 
     def __init__(self, nIn, nOut, weights=None,
-                 activation='sigmoid', isClassifierLayer=False, momentum = 0):
+                 activation='sigmoid', isClassifierLayer=False, momentum = 0, prevLayer = None, nextLayer = None):
 
         # Get activation function from string
         self.activationString = activation
@@ -54,6 +54,8 @@ class LogisticLayer():
         self.inp[0] = 1
         self.outp = np.ndarray((nOut, 1))
         self.deltas = np.zeros((nOut, 1))
+        self.prevLayer = prevLayer
+        self.nextLayer = nextLayer
         
         self.momentum = momentum
         
@@ -130,7 +132,7 @@ class LogisticLayer():
         # Or even more general: doesn't care which activation function is used
         # dado: derivative of activation function w.r.t the output
         dado = self.activationDerivative(self.outp)
-        self.deltas = (dado * np.dot(next_derivatives, next_weights))
+        self.deltas = (dado * np.dot(next_weights, next_derivatives))
 
         # Or you can explicitly calculate the derivatives for two cases
         # Page 40 Back-propagation slides
@@ -154,9 +156,10 @@ class LogisticLayer():
         if (self.momentum > 0):
             self.velocity = self.momentum * self.velocity
             for neuron in range(0, self.nOut):
-                self.velocity[:, neuron] += (self.deltas[neuron] *
-                                            self.inp)
-            self.weights -= learningRate * self.velocity
+                self.velocity[:, neuron] -= (learningRate *
+                                             self.deltas[neuron] *
+                                             self.inp)
+            self.weights += self.velocity
         else:   
             for neuron in range(0, self.nOut):
                 self.weights[:, neuron] -= (learningRate *

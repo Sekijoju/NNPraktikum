@@ -78,18 +78,24 @@ class MultilayerPerceptron(Classifier):
 
         # Input layer
         inputActivation = "sigmoid"
-        self.layers.append(LogisticLayer(train.input.shape[1], 256, 
+        self.layers.append(LogisticLayer(train.input.shape[1], 512, 
                            None, inputActivation, False, momentum = self.momentum))
 
         # Hidden layers
         hiddenActivation = "sigmoid"
-        self.layers.append(LogisticLayer(256, 128, 
+        self.layers.append(LogisticLayer(512, 128, 
                            None, hiddenActivation, False, momentum = self.momentum))
 
         # Output layer
         outputActivation = "softmax"
         self.layers.append(LogisticLayer(128, 10, 
                            None, outputActivation, True, momentum = self.momentum))
+
+        for i in range(len(self.layers)):
+            if i != 0:
+                self.layers[i].prevLayer = self.layers[i-1]
+            if i != len(self.layers) - 1:
+                self.layers[i].nextLayer = self.layers[i+1]
 
         self.inputWeights = inputWeights
 
@@ -152,11 +158,13 @@ class MultilayerPerceptron(Classifier):
         target[label] = 1.0
         next_derivative = self.loss.calculateDerivative(target, self._get_output_layer().outp)
         next_layer_weights = np.identity(self._get_output_layer().nOut)
-
+        tmp_velocity = np.zeros(next_layer_weights.shape)
         # Backpropagate:
         for layer in reversed(self.layers):
             # Compute the derivatives:
-            next_derivative = layer.computeDerivative(next_derivative, next_layer_weights.T)
+            if not layer.isClassifierLayer:
+                tmp_velocity = np.delete(layer.nextLayer.velocity, 0, axis = 0)
+            next_derivative = layer.computeDerivative(next_derivative, next_layer_weights + tmp_velocity)
             # Remove bias from weights, so it matches the output size of the next layer:
             next_layer_weights = np.delete(layer.weights, 0, axis=0)
 
@@ -198,12 +206,12 @@ class MultilayerPerceptron(Classifier):
 
             #Set the momentum higher if we are stuck (0.9 is the max value we are choosing here)
             #there are better criterias for when to enhance then momentum than what we use here
-            if self.momentum > 0 and not momentum_changed:
-                if np.abs(np.mean(self.performances) - self.performances[-1]) < 0.10 and epoch > (self.epochs/2):
-                    for layer in self.layers:
-                        layer.momentum = 0.9
-                    print ("Enhancing momentum to ", self._get_output_layer().momentum)
-                    momentum_changed = True
+            #if self.momentum > 0 and not momentum_changed:
+            #    if np.abs(np.mean(self.performances) - self.performances[-1]) < 0.10 and epoch > (self.epochs/2):
+            #        for layer in self.layers:
+            #            layer.momentum = 0.9
+            #        print ("Enhancing momentum to ", self._get_output_layer().momentum)
+            #        momentum_changed = True
 
             #Reduce the learning rate if dynamic learning rate is active 
             if self.dynamicLR:
