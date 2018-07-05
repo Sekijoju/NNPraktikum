@@ -78,17 +78,17 @@ class MultilayerPerceptron(Classifier):
 
         # Input layer
         inputActivation = "sigmoid"
-        self.layers.append(LogisticLayer(train.input.shape[1], 128, 
+        self.layers.append(LogisticLayer(train.input.shape[1], 256, 
                            None, inputActivation, False, momentum = self.momentum))
 
         # Hidden layers
         hiddenActivation = "sigmoid"
-        self.layers.append(LogisticLayer(128, 64, 
+        self.layers.append(LogisticLayer(256, 128, 
                            None, hiddenActivation, False, momentum = self.momentum))
 
         # Output layer
         outputActivation = "softmax"
-        self.layers.append(LogisticLayer(64, 10, 
+        self.layers.append(LogisticLayer(128, 10, 
                            None, outputActivation, True, momentum = self.momentum))
 
         self.inputWeights = inputWeights
@@ -197,16 +197,19 @@ class MultilayerPerceptron(Classifier):
                 print("-----------------------------")
 
             #Set the momentum higher if we are stuck (0.9 is the max value we are choosing here)
+            #there are better criterias for when to enhance then momentum than what we use here
             if self.momentum > 0 and not momentum_changed:
-                if np.abs(np.mean(self.performances) - self.performances[-1]) < 0.10 and epoch > 10:
+                if np.abs(np.mean(self.performances) - self.performances[-1]) < 0.10 and epoch > (self.epochs/2):
                     for layer in self.layers:
                         layer.momentum = 0.9
-                    print ("Change in momentum: ", self._get_output_layer().momentum)
+                    print ("Enhancing momentum to ", self._get_output_layer().momentum)
                     momentum_changed = True
 
             #Reduce the learning rate if dynamic learning rate is active 
             if self.dynamicLR:
-                if ((epoch+1)%5) == 0:
+                if epoch > 1 and self.performances[-2] > self.performances[-1]:
+                    self.learningRate = self.learningRate * 0.75
+                elif ((epoch+1)%5) == 0:
                     self.learningRate = self.learningRate * 0.75
 
 

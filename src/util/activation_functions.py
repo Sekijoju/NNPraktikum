@@ -45,13 +45,14 @@ class Activation:
 
     @staticmethod
     def rectified(netOutput):
-        return asarray([max(0.0, i) for i in netOutput])
+        #return asarray([max(0.0, i) for i in netOutput])
+        return netOutput * (netOutput > 0)
 
     @staticmethod
     def rectifiedPrime(netOutput):
         # reluPrime=1 if netOutput > 0 otherwise 0
         #print(type(netOutput))
-        return netOutput>0
+        return 1. * (netOutput > 0)
 
     @staticmethod
     def identity(netOutput):
